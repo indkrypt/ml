@@ -1,30 +1,121 @@
+# Simple Linear Regression using sales.csv
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-data = pd.read_csv("sales.csv")
-X = data[["fahrenheit"]]
-y = data["sales"]
+# Load dataset
+df = pd.read_csv("sales.csv")
 
+print("First five rows:")
+print(df.head())
+
+# i. Separate input and output variables
+X = df[["fahrenheit"]]
+y = df["sales"]
+
+# ii. Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42)
+    X, y, test_size=0.2, random_state=42
+)
 
+# iii. Data scaling
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
 
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# iv. Create and train the regression model
 model = LinearRegression()
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
+model.fit(X_train_scaled, y_train)
 
+# v. Predict sales
+y_pred = model.predict(X_test_scaled)
+
+# vi. Evaluate the model
+mae = mean_absolute_error(y_test, y_pred)
 mse = mean_squared_error(y_test, y_pred)
-print("MAE:", mean_absolute_error(y_test, y_pred))
-print("MSE:", mse)
-print("RMSE:", np.sqrt(mse))
+rmse = np.sqrt(mse)
+
+print("\nModel Evaluation:")
+print("Mean Absolute Error (MAE):", mae)
+print("Mean Squared Error (MSE):", mse)
+print("Root Mean Squared Error (RMSE):", rmse)
+
+# Graph 1: Actual Data and Regression Line
+plt.figure(figsize=(8, 5))
+
+# Plot actual data
+plt.scatter(
+    X["fahrenheit"], y,
+    color="blue",
+    label="Actual Data"
+)
+
+# Generate values for the regression line
+x_line = np.linspace(
+    X["fahrenheit"].min(),
+    X["fahrenheit"].max(),
+    100
+).reshape(-1, 1)
+
+# Scale input values
+x_line_scaled = scaler.transform(x_line)
+
+# Predict sales for the regression line
+y_line = model.predict(x_line_scaled)
+
+# Plot regression line
+plt.plot(
+    x_line, y_line,
+    color="red",
+    linewidth=2,
+    label="Regression Line"
+)
+
+plt.xlabel("Temperature (Fahrenheit)")
+plt.ylabel("Sales")
+plt.title("Temperature vs Sales - Linear Regression")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Graph 2: Actual vs Predicted Sales
+plt.figure(figsize=(8, 5))
+
+# Plot actual and predicted values
+plt.scatter(
+    y_test, y_pred,
+    color="green",
+    label="Predicted Sales"
+)
+
+# Add reference line for perfect predictions
+min_val = min(y_test.min(), y_pred.min())
+max_val = max(y_test.max(), y_pred.max())
+
+plt.plot(
+    [min_val, max_val],
+    [min_val, max_val],
+    color="red",
+    linestyle="--",
+    linewidth=2,
+    label="Perfect Prediction"
+)
+
+plt.xlabel("Actual Sales")
+plt.ylabel("Predicted Sales")
+plt.title("Actual vs Predicted Sales")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 fahrenheit,sales
 1,1262
